@@ -12,21 +12,50 @@ if(isset( $wp_query->query['tags'] ) ) {
   $arr_check = explode("_", $query_var);
   //print_r($arr_check);  
   //arr 0 la cha trong cai menu hien tai
-  $parent_cat_id = $arr_check[0];
-  $sub_tag_id = $arr_check[1];
-
-  //seach term nay
-  $current_parent_term = get_term_by('id', $parent_cat_id, 'chung-loai');
-  //print_r($current_parent_term);
+  $parent_cat_slug_check = $arr_check[0];
+  $sub_tag_slug = $arr_check[1];
 
 
-  $link_pim_id = get_field('cat_pim_id', $current_parent_term);  
- //echo  $link_pim_id;
 
+  //can thiep tho bao vao mysql
+  global $wpdb;
+  $table = $wpdb->prefix . 'termmeta' ;
+  if ($current_lang =="vi") {
+    $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_vi' and meta_value  ='" . $parent_cat_slug_check . "'");
+  } else {
+      $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_en' and meta_value  ='" . $parent_cat_slug_check . "'" );
+  }
+
+  
+
+  $parent_cat_slug = $mylink->meta_value;
+  $parent_cat_id =  (int)$mylink->term_id;
+
+  $parent_term = get_term($parent_cat_id, 'chung-loai');
+ 
+  $link_pim_id = get_field('cat_pim_id', $parent_term);  
 
   global $remote_pim; 
   //$remote_pim = new wpdb('root','','2018_pim','localhost');
   $remote_pim = new wpdb('pim','Daviteq@123','pim_wepabb','192.168.10.114');
+
+  $sub_tag_id = '';
+  //tim ten sub_tag theo id
+  if ($current_lang =="vi") {
+    $sub_cat_find_rows = $remote_pim->get_results("select cat_id
+    from categories where cat_title_url='" .  esc_html($sub_tag_slug) . "'");
+  } else {
+    $sub_cat_find_rows = $remote_pim->get_results("select cat_id 
+    from categories where cat_title_url_en='" . esc_html($sub_tag_slug) . "'");
+  }
+
+  
+  foreach ($sub_cat_find_rows as $sub_cat_find_item) {
+    $sub_tag_id = $sub_cat_find_item->cat_id;
+    
+  }
+
+
 
 ?>
 
@@ -59,25 +88,30 @@ if(isset( $wp_query->query['tags'] ) ) {
   <?php 
       //tim cac sub cua no
         if ($current_lang =="vi") {
-          $sub_cat_rows = $remote_pim->get_results("select cat_id, cat_title, cat_title_url
-          from categories where cat_parent=" . $link_pim_id);
+          $sql = "select cat_id, cat_title, cat_title_url
+          from categories where cat_parent=" . $link_pim_id ;
+          
         } else {
-          $sub_cat_rows = $remote_pim->get_results("select cat_id, cat_title_en as cat_title, cat_title_url_en as cat_title_url
-          from categories where cat_parent=" . $link_pim_id);
+          $sql = "select cat_id, cat_title_en as cat_title, cat_title_url_en as cat_title_url
+          from categories where cat_parent=" . $link_pim_id ;
+         
         }
+     //   echo $sql;
+        
+        $sub_cat_rows = $remote_pim->get_results($sql);
        
   
     // tim ten cua current tags nay
-         $sub_tag_rows = $remote_pim->get_results("select * 
+         $sub_tag_rows_find = $remote_pim->get_results("select * 
     from categories where cat_id=" . $sub_tag_id);
 
        //  print_r($sub_tag_rows);
          if ($current_lang =="vi") {
-          foreach ($sub_tag_rows as $sub_tag_item) {
+          foreach ($sub_tag_rows_find as $sub_tag_item) {
             $sub_cat_name = $sub_tag_item->cat_title;
           }
          } else {
-          foreach ($sub_tag_rows as $sub_tag_item) {
+          foreach ($sub_tag_rows_find as $sub_tag_item) {
             $sub_cat_name = $sub_tag_item->cat_title_en;
          }
          }
@@ -95,9 +129,11 @@ if(isset( $wp_query->query['tags'] ) ) {
 
          }
 
-        //  echo $sql_select_product;
+          if (strlen($sub_cat_name)>0) {
+            $product_rows = $remote_pim->get_results($sql_select_product); 
+          }
   
-          $product_rows = $remote_pim->get_results($sql_select_product); 
+         
 
 
 
@@ -108,7 +144,7 @@ if(isset( $wp_query->query['tags'] ) ) {
         <ul class="submenu">
              <?php
               foreach ($sub_cat_rows as $sub_cat_item) { 
-                 $sub_term_link  =  get_home_url() . '/?tags=' . $parent_cat_id . '_' . $sub_cat_item->cat_id . '_' . $sub_cat_item->cat_title_url ;
+                 $sub_term_link  =  get_home_url() . '/?tags=' . $parent_cat_slug .  '_' . $sub_cat_item->cat_title_url ;
 
                  if ($sub_cat_item->cat_id == $sub_tag_id) {
                     echo "<li><span>" . $sub_cat_item->cat_title . "</span></li>";
@@ -162,7 +198,7 @@ if(isset( $wp_query->query['tags'] ) ) {
             foreach($sub_menu_rows as $sub_menu_items) {
 
 
-                $sub_menu_link  = get_home_url() . '/?tags=' . $parent_cat_id . '_' . $sub_menu_items->cat_id . '_' . $sub_menu_items->cat_title_url ;
+                $sub_menu_link  = get_home_url() . '/?tags=' . $parent_cat_slug .  '_' . $sub_menu_items->cat_title_url ;
 
                  //$sub_menu_link  =  get_home_url() . '/?tags=' . $sub_menu_items->cat_title_url ;
 
@@ -216,7 +252,7 @@ if(isset( $wp_query->query['tags'] ) ) {
            <div class="col-sm-4 col-md-4 col-lg-4">
             <div class="spListItem">
               <p class="spListItemImg">
-                <?php $link_item = get_home_url() . '/?prd=' . $parent_cat_id . '_' . $product_item->product_sku . '_' . 
+                <?php $link_item = get_home_url() . '/?prd=' . $parent_cat_slug . '_' . $product_item->product_sku . '_' . 
                 $product_item->product_name_seo  ?>
                 <a title="<?php echo $product_item->product_name;  ?>" href="<?php echo $link_item;   ?>">
                 <img class="imgFit"  src="<?php echo $product_item->product_img_1;  ?>" alt="<?php echo $product_item->product_name;  ?>" /></a></p>

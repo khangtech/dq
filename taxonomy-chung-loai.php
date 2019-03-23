@@ -10,13 +10,30 @@ $current_lang = 	qtranxf_getLanguage() ;
 //$current_term_link = get_term_link( $current_term );
 
 $term_id = $current_term->term_id;
+
+
+//can thiep tho bao vao mysql
+global $wpdb;
+$table = $wpdb->prefix . 'termmeta' ;
+if ($current_lang =="vi") {
+  $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_vi' and term_id  =" . $term_id );
+} else {
+  $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_en' and term_id  =" . $term_id );
+}
+
+$term_name = $mylink->meta_value;
+
+
+
+//$term_name = $current_term->slug; 
+//print_r($current_term);
 // tim lien ket cha only
 $link_pim_id = get_field('cat_pim_id', $current_term);  
  
 //print_r($link_pim_id); 
 
 global $remote_pim; 
-//remote_pim = new wpdb('root','','2018_pim','localhost');
+//$remote_pim = new wpdb('root','','2018_pim','localhost');
 $remote_pim = new wpdb('pim','Daviteq@123','pim_wepabb','192.168.10.114');
 
 
@@ -97,7 +114,7 @@ if (!empty($link_pim_id) &&  $link_pim_id >0 ) {
           <?php
             if ($current_lang =="vi") { 
               foreach ($sub_cat_rows as $sub_cat_item) { 
-                 $sub_term_link  =  get_home_url() . '/?tags=' . $term_id . '_' . $sub_cat_item->cat_id . '_' . $sub_cat_item->cat_title_url ;
+                 $sub_term_link  =  get_home_url() . '/?tags=' . $term_name . '_'   . $sub_cat_item->cat_title_url ;
           ?>
               <li>
                 <a href="<?php echo $sub_term_link ?>"><?php echo $sub_cat_item->cat_title; ?></a>
@@ -106,7 +123,7 @@ if (!empty($link_pim_id) &&  $link_pim_id >0 ) {
               }  } 
             else {
               foreach ($sub_cat_rows as $sub_cat_item) { 
-                $sub_term_link  =  get_home_url() . '/?tags=' . $term_id . '_' . $sub_cat_item->cat_id . '_' . $sub_cat_item->cat_title_url_en ;
+                $sub_term_link  =  get_home_url() . '/?tags=' . $term_name . '_' .  $sub_cat_item->cat_title_url_en ;
          ?>
              <li>
                <a href="<?php echo $sub_term_link ?>"><?php echo $sub_cat_item->cat_title_en; ?></a>
@@ -162,7 +179,7 @@ if (!empty($link_pim_id) &&  $link_pim_id >0 ) {
 
             foreach($sub_menu_rows as $sub_menu_items) {
               
-                  $sub_menu_link  =  get_home_url() . '/?tags=' . $term_id . '_' . $sub_menu_items->cat_id . '_' . $sub_menu_items->cat_title_url ;
+                  $sub_menu_link  =  get_home_url() . '/?tags=' . $term_name . '_' . $sub_menu_items->cat_title_url ;
 
             ?>                
            
@@ -205,7 +222,7 @@ if (!empty($link_pim_id) &&  $link_pim_id >0 ) {
            <div class="col-sm-4 col-md-4 col-lg-4">
             <div class="spListItem">
               <p class="spListItemImg">
-                <?php $link_item = get_home_url() . '/?prd=' . $term_id . '_' . $product_item->product_sku . '_' . 
+                <?php $link_item = get_home_url() . '/?prd=' . $term_name . '_' . $product_item->product_sku . '_' . 
                 $product_item->product_name_seo  ?>
                 <a title="<?php echo $product_item->product_name;  ?>" href="<?php echo $link_item;   ?>">
                 <img class="imgFit" src="<?php echo $product_item->product_img_1;  ?>" alt="<?php echo $product_item->product_name;  ?>" /></a></p>

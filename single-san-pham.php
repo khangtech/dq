@@ -13,16 +13,29 @@ if(isset( $wp_query->query['prd'] ) ) {
   $arr_check = explode("_", $query_var);
   //print_r($arr_check);  
   //arr 0 la cha trong cai menu hien tai
-  $parent_cat_id = $arr_check[0];
+  $parent_cat_slug_check = $arr_check[0];
   //$product_id = $arr_check[1];
   $product_sku = $arr_check[1];
 
-  //seach term nay
-  $current_parent_term = get_term_by('id', $parent_cat_id, 'chung-loai');
-  //print_r($current_parent_term);
 
-  $link_pim_id = get_field('cat_pim_id', $current_parent_term);  
- //echo  $link_pim_id;
+
+  //can thiep tho bao vao mysql
+  global $wpdb;
+  $table = $wpdb->prefix . 'termmeta' ;
+  if ($current_lang =="vi") {
+    $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_vi' and meta_value  ='" . $parent_cat_slug_check . "'");
+  } else {
+      $mylink = $wpdb->get_row( "SELECT * FROM $table WHERE meta_key ='_qts_slug_en' and meta_value  ='" . $parent_cat_slug_check . "'" );
+  }
+
+  
+
+  $parent_cat_slug = $mylink->meta_value;
+  $parent_cat_id =  (int)$mylink->term_id;
+
+  $parent_term = get_term($parent_cat_id, 'chung-loai');
+ 
+  $link_pim_id = get_field('cat_pim_id', $parent_term);  
 
   global $remote_pim; 
  // $remote_pim = new wpdb('root','','2018_pim','localhost');
@@ -104,7 +117,7 @@ if(isset( $wp_query->query['prd'] ) ) {
         <ul class="submenu">
              <?php
               foreach ($sub_cat_rows as $sub_cat_item) { 
-                 $sub_term_link  =  get_home_url() . '/?tags=' . $parent_cat_id . '_' . $sub_cat_item->cat_id . '_' . $sub_cat_item->cat_title_url ;
+                 $sub_term_link  =  get_home_url() . '/?tags=' . $parent_cat_slug .  '_' . $sub_cat_item->cat_title_url ;
 			 ?>
                     <li>
                         <a href="<?php echo $sub_term_link ?>"><?php echo $sub_cat_item->cat_title; ?></a>
@@ -540,8 +553,8 @@ if(isset( $wp_query->query['prd'] ) ) {
       <div id="productSlide" class="owl-carousel">
       	<?php 
       		foreach ($product_related_items as $product_related_item) {
-      			$related_link_item = get_home_url() . '/?prd=' . $parent_cat_id . '_' 
-      			. $product_related_item->product_id . '_' . $product_related_item->product_name_seo  ;
+      			$related_link_item = get_home_url() . '/?prd=' . $parent_cat_slug . '_' 
+      			. $product_related_item->product_sku . '_' . $product_related_item->product_name_seo  ;
 
           //      $photo_item = $product_related_item->product_img_1; 
                 if ($current_lang=="vi") {
