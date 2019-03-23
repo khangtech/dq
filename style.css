@@ -1787,6 +1787,18 @@ text-transform: uppercase;
 }
 }
 @media (max-width: 767px) {
+
+
+.productlanding .container .col-sm-9 table {
+	border-style: none !important;
+}
+
+.productlanding .container .col-sm-9 table tr td img {
+	max-width: 100%;
+	min-width: 50px;
+}
+
+
 .navbar-default {
 	padding-bottom: 0;
 }

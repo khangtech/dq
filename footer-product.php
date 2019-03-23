@@ -67,12 +67,12 @@
 
 
 		<div class="col-sm-2 fInfo">
-<h4><?php
+		<h4><a  href="<?php echo get_the_permalink(139); ?>"><?php
 
 $txtGiaiPhap = $current_lang == "vi" ? "Giải pháp chính" : "Solutions" ;
 echo $txtGiaiPhap	;
 
-?></h4>
+?></a></h4>
 
 <ul>
 	<?php
